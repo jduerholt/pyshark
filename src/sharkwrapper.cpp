@@ -70,6 +70,7 @@ unsigned int mocmaes(void (*callback)(int,int, double *, double *), unsigned int
 	while (custom.evaluationCounter() < maxiter) mocma.step(custom);
 
 	// Print the optimal pareto front
+	cout << "--------------------------------------" << endl;
 	for( std::size_t i = 0; i < mocma.solution().size(); i++ ) {
         for( std::size_t j = 0; j < numObjectives; j++ ) {
                 std::cout<< mocma.solution()[ i ].value[j]<<" ";

@@ -22,8 +22,12 @@
  */
  struct Mocustom : public shark::MultiObjectiveFunction
  {
- 	Mocustom(std::size_t numberOfVariables, std::size_t numOfObjectives) : m_numberOfVariables(numberOfVariables),m_numberOfObjectives(numOfObjectives){
+ 	Mocustom(std::size_t numberOfVariables, std::size_t numOfObjectives) :
+        m_numberOfVariables(numberOfVariables),m_numberOfObjectives(numOfObjectives),
+        m_handler(SearchPointType(numberOfVariables,0),SearchPointType(numberOfVariables,1) )
+    {
         m_features |= CAN_PROPOSE_STARTING_POINT;
+        announceConstraintHandler(&m_handler);
     }
 
 	void init(void (*callback)(int,int, double *, double *)){
@@ -108,5 +112,5 @@
  	std::size_t m_numberOfObjectives;
 	std::size_t m_numberOfVariables;
 	void (*m_callback)(int,int, double *, double *);
- 	//BoxConstraintHandler<SearchPointType> m_handler;
+ 	shark::BoxConstraintHandler<SearchPointType> m_handler;
  };
