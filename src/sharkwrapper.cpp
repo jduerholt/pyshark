@@ -5,6 +5,7 @@
 #include <shark/Algorithms/DirectSearch/CMA.h>
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include "socustom.h"
 #include "mocustom.h"
@@ -53,8 +54,8 @@ unsigned int do_stuff_with_shark(unsigned int evaluations)
 	return mocma.solution().size();
 }
 
-unsigned int mocmaes(void (*callback)(int,int, double *, double *), unsigned int dim, unsigned int numObjectives,
-	double *initial, int maxiter, double *lowerBound, double *upperBound)
+double** mocmaes(void (*callback)(int,int, double *, double *), unsigned int dim, unsigned int numObjectives,
+	double *initial, int maxiter, double *lowerBound, double *upperBound, int mu, double sigma)
 {
     // setup constraint m_handler
     shark::BoxConstraintHandler<shark::RealVector> handler;
@@ -67,31 +68,45 @@ unsigned int mocmaes(void (*callback)(int,int, double *, double *), unsigned int
         for(int i = 0; i<dim; i++) upper[i] = upperBound[i];
         handler.setBounds(lower, upper);
     }
-	// setup objective function
-	Mocustom custom(dim, numObjectives, handler);
-	custom.init(callback);
 	// make Searchpoint out of initial array
 	shark::RealVector x(dim);
 	for (int i = 0; i < x.size(); i++) {
 		x(i) = initial[i];
 	}
+    // setup objective function
+	Mocustom custom(dim, numObjectives, handler, x);
+	custom.init(callback);
 	// setup mocma
 	shark::MOCMA mocma;
+    mocma.mu() = mu;
+    mocma.initialSigma() = sigma;
 	mocma.init(custom);
 	// return
 	while (custom.evaluationCounter() < maxiter) mocma.step(custom);
 
-	// Print the optimal pareto front
-	cout << "--------------------------------------" << endl;
+	// write the pareto front to pareto.dat
+    std::ofstream fpareto;
+    fpareto.open ("pareto.dat");
 	for( std::size_t i = 0; i < mocma.solution().size(); i++ ) {
         for( std::size_t j = 0; j < numObjectives; j++ ) {
-                std::cout<< mocma.solution()[ i ].value[j]<<" ";
+                fpareto<< mocma.solution()[ i ].value[j]<<" ";
         }
-        std::cout << std::endl;
+        fpareto << "\n";
 	}
+    fpareto.close();
 
-
-	return mocma.solution().size();
+    // put all solution in a heap allocated array
+    double **solutions = new double*[mocma.solution().size()];
+    //for(int i = 0; i < numObjectives; i++) solutions[i] = new double[dim];
+    for(int i = 0; i < mocma.solution().size(); i++)
+    {
+        solutions[i] = new double[dim];
+        for(int j = 0; j < dim; j++)
+        {
+            solutions[i][j]=mocma.solution()[i].point[j];
+        }
+    }
+	return solutions;
 }
 
 

@@ -23,9 +23,9 @@
  struct Mocustom : public shark::MultiObjectiveFunction
  {
  	Mocustom(std::size_t numberOfVariables, std::size_t numOfObjectives,
-        shark::BoxConstraintHandler<SearchPointType> handler) :
+        shark::BoxConstraintHandler<SearchPointType> handler, shark::RealVector startingPoint) :
         m_numberOfVariables(numberOfVariables),m_numberOfObjectives(numOfObjectives),
-        m_handler(handler)
+        m_handler(handler), m_startingPoint(startingPoint)
     {
         m_features |= CAN_PROPOSE_STARTING_POINT;
         announceConstraintHandler(&m_handler);
@@ -44,14 +44,14 @@
  		return m_numberOfObjectives;
  	}
  	bool hasScalableObjectives()const{
- 		return true;
+ 		return false;
  	}
- 	void setNumberOfObjectives( std::size_t numberOfObjectives ){
+ 	/*void setNumberOfObjectives( std::size_t numberOfObjectives ){
  		m_numberOfObjectives = numberOfObjectives;
- 	}
+ 	}*/
 
  	std::size_t numberOfVariables()const{
- 		return m_numberOfVariables;
+ 		return m_handler.dimensions();
  	}
 
  	bool hasScalableDimensionality()const{
@@ -60,18 +60,20 @@
 
  	/// \brief Adjusts the number of variables if the function is scalable.
  	/// \param [in] numberOfVariables The new dimension.
- 	void setNumberOfVariables( std::size_t numberOfVariables ){
+ 	/*void setNumberOfVariables( std::size_t numberOfVariables ){
 		m_numberOfVariables = numberOfVariables;
- 	}
+ 	}*/
 
     SearchPointType proposeStartingPoint() const {
-		shark::RealVector x(m_numberOfVariables);
+        return m_startingPoint;
+    }
+		/*shark::RealVector x(m_numberOfVariables);
 
 		for (std::size_t i = 0; i < x.size(); i++) {
 			x(i) = 0.5;
 		}
 		return x;
-	}
+	}*/
 
  	ResultType eval( const SearchPointType & x ) const {
  		m_evaluationCounter++;
@@ -114,4 +116,5 @@
 	std::size_t m_numberOfVariables;
 	void (*m_callback)(int,int, double *, double *);
  	shark::BoxConstraintHandler<SearchPointType> m_handler;
+    shark::RealVector m_startingPoint;
  };
