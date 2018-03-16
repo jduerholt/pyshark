@@ -1,6 +1,7 @@
 
 #include <shark/Algorithms/DirectSearch/MOCMA.h>
 #include <shark/ObjectiveFunctions/Benchmarks/Benchmarks.h>
+#include <shark/ObjectiveFunctions/BoxConstraintHandler.h>
 #include <shark/Algorithms/DirectSearch/CMA.h>
 
 #include <iostream>
@@ -53,10 +54,21 @@ unsigned int do_stuff_with_shark(unsigned int evaluations)
 }
 
 unsigned int mocmaes(void (*callback)(int,int, double *, double *), unsigned int dim, unsigned int numObjectives,
-	double *initial, int maxiter)
+	double *initial, int maxiter, double *lowerBound, double *upperBound)
 {
+    // setup constraint m_handler
+    shark::BoxConstraintHandler<shark::RealVector> handler;
+    if(lowerBound)
+    {
+        // pass data from arrays to searchPoint type
+        shark::RealVector lower(dim);
+        for(int i = 0; i<dim; i++) lower[i] = lowerBound[i];
+        shark::RealVector upper(dim);
+        for(int i = 0; i<dim; i++) upper[i] = upperBound[i];
+        handler.setBounds(lower, upper);
+    }
 	// setup objective function
-	Mocustom custom(dim, numObjectives);
+	Mocustom custom(dim, numObjectives, handler);
 	custom.init(callback);
 	// make Searchpoint out of initial array
 	shark::RealVector x(dim);
