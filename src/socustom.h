@@ -36,19 +36,11 @@ struct Socustom : public shark::SingleObjectiveFunction {
 		m_numberOfVariables = numberOfVariables;
 	}
 
-	SearchPointType proposeStartingPoint() const {
-		shark::RealVector x(numberOfVariables());
-
-		for (std::size_t i = 0; i < x.size(); i++) {
-			x(i) = shark::Rng::gauss(0,1);
-		}
-		return x;
-	}
 
 	double eval(const SearchPointType &p) const {
         //increase counter
 		m_evaluationCounter++;
-        // transform SearchPointType to std::vector
+        // transform SearchPointType to array
         double *parr = new double[p.size()];
         for (int i; i<p.size();i++) parr[i] = p[i];
         /*std::vector<double> pvec;

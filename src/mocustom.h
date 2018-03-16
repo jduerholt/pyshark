@@ -22,9 +22,11 @@
  */
  struct Mocustom : public shark::MultiObjectiveFunction
  {
- 	Mocustom(std::size_t numberOfVariables, std::size_t numObjectives) : m_objectives(numObjectives),m_numberOfVariables(numberOfVariables){}
+ 	Mocustom(std::size_t numberOfVariables, std::size_t numOfObjectives) : m_numberOfVariables(numberOfVariables),m_numberOfObjectives(numOfObjectives){
+        m_features |= CAN_PROPOSE_STARTING_POINT;
+    }
 
-	void init(double* (*callback)(int, double *)){
+	void init(void (*callback)(int,int, double *, double *)){
         m_evaluationCounter=0;
         m_callback = callback;
     }
@@ -34,13 +36,13 @@
  	{ return "Mocustom"; }
 
  	std::size_t numberOfObjectives()const{
- 		return m_objectives;
+ 		return m_numberOfObjectives;
  	}
  	bool hasScalableObjectives()const{
  		return true;
  	}
  	void setNumberOfObjectives( std::size_t numberOfObjectives ){
- 		m_objectives = numberOfObjectives;
+ 		m_numberOfObjectives = numberOfObjectives;
  	}
 
  	std::size_t numberOfVariables()const{
@@ -57,17 +59,36 @@
 		m_numberOfVariables = numberOfVariables;
  	}
 
+    SearchPointType proposeStartingPoint() const {
+		shark::RealVector x(m_numberOfVariables);
+
+		for (std::size_t i = 0; i < x.size(); i++) {
+			x(i) = 0.5;
+		}
+		return x;
+	}
+
  	ResultType eval( const SearchPointType & x ) const {
  		m_evaluationCounter++;
 		// transform SearchPointType to array
 		double *parr = new double[x.size()];
+        double *fitness = new double[m_numberOfObjectives];
         for (int i; i<x.size();i++) parr[i] = x[i];
 		// call callback function
-		double fitness = m_callback(x.size(), parr);
-
- 		RealVector value( numberOfObjectives() );
-
- 		std::size_t k = numberOfVariables() - numberOfObjectives() + 1 ;
+		//double *fitness = new double[m_numberOfObjectives];
+        m_callback(x.size(),m_numberOfObjectives,parr, fitness);
+        //std::cout << "mama" << std::endl;
+        //std::cout << fitness[0] << std::endl;
+        // put result from callback function into a RealVector object
+ 		shark::RealVector value( m_numberOfObjectives );
+        for(int i; i<m_numberOfObjectives;i++) value[i] = fitness[i];
+        // delete heap allocated arrays
+        delete[] parr;
+        delete[] fitness;
+        // return value
+        return value;
+    }
+ 		/*std::size_t k = numberOfVariables() - numberOfObjectives() + 1 ;
  		double g = 0.0;
  		for( std::size_t i = numberOfVariables() - k; i < numberOfVariables(); i++ )
  			g += sqr( x( i ) - 0.5);
@@ -82,10 +103,10 @@
  		}
 
  		return value;
- 	}
+ 	}*/
  private:
- 	std::size_t m_objectives;
+ 	std::size_t m_numberOfObjectives;
 	std::size_t m_numberOfVariables;
-	double* (*m_callback)(int, double *);
+	void (*m_callback)(int,int, double *, double *);
  	//BoxConstraintHandler<SearchPointType> m_handler;
  };

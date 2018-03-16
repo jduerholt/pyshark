@@ -6,6 +6,7 @@
 #include <iostream>
 #include <vector>
 #include "socustom.h"
+#include "mocustom.h"
 #include "sharkwrapper.h"
 
 using namespace std;
@@ -36,9 +37,47 @@ unsigned int do_stuff_with_shark(unsigned int evaluations)
 	shark::MOCMA mocma;
 	dtlz2.init();
 	mocma.init(dtlz2);
-	while (dtlz2.evaluationCounter() < evaluations) mocma.step(dtlz2);
+	while (dtlz2.evaluationCounter() < evaluations) {
+		mocma.step(dtlz2);
+	}
+	// Print the optimal pareto front
+	for( std::size_t i = 0; i < mocma.solution().size(); i++ ) {
+        for( std::size_t j = 0; j < dtlz2.numberOfObjectives(); j++ ) {
+                std::cout<< mocma.solution()[ i ].value[j]<<" ";
+        }
+        std::cout << std::endl;
+	}
 
 	// We return the number of Pareto optimal solutions.
+	return mocma.solution().size();
+}
+
+unsigned int mocmaes(void (*callback)(int,int, double *, double *), unsigned int dim, unsigned int numObjectives,
+	double *initial, int maxiter)
+{
+	// setup objective function
+	Mocustom custom(dim, numObjectives);
+	custom.init(callback);
+	// make Searchpoint out of initial array
+	shark::RealVector x(dim);
+	for (int i = 0; i < x.size(); i++) {
+		x(i) = initial[i];
+	}
+	// setup mocma
+	shark::MOCMA mocma;
+	mocma.init(custom);
+	// return
+	while (custom.evaluationCounter() < maxiter) mocma.step(custom);
+
+	// Print the optimal pareto front
+	for( std::size_t i = 0; i < mocma.solution().size(); i++ ) {
+        for( std::size_t j = 0; j < numObjectives; j++ ) {
+                std::cout<< mocma.solution()[ i ].value[j]<<" ";
+        }
+        std::cout << std::endl;
+	}
+
+
 	return mocma.solution().size();
 }
 
