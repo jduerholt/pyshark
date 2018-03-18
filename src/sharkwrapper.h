@@ -16,9 +16,9 @@ unsigned int do_stuff_with_shark(unsigned int evaluations);
 unsigned int cmaes();
 double* custom_cmaes(double (*callback)(int, double *), unsigned int dim,
     double *inital, double sigma, int maxiter);
-double** mocmaes(void (*callback)(int,int, double *, double*), unsigned int dim,
+int mocmaes(void (*callback)(int,int, double *, double*), unsigned int dim,
     unsigned int numObjectives, double *initial, int maxiter,
-    double *lowerBound, double *upperBound, int mu, double sigma);
+    double *lowerBound, double *upperBound, int mu, double sigma, double *solutions);
 
 
 #ifdef __cplusplus

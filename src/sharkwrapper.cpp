@@ -54,8 +54,8 @@ unsigned int do_stuff_with_shark(unsigned int evaluations)
 	return mocma.solution().size();
 }
 
-double** mocmaes(void (*callback)(int,int, double *, double *), unsigned int dim, unsigned int numObjectives,
-	double *initial, int maxiter, double *lowerBound, double *upperBound, int mu, double sigma)
+int mocmaes(void (*callback)(int,int, double *, double *), unsigned int dim, unsigned int numObjectives,
+	double *initial, int maxiter, double *lowerBound, double *upperBound, int mu, double sigma, double *solutions)
 {
     // setup constraint m_handler
     shark::BoxConstraintHandler<shark::RealVector> handler;
@@ -94,19 +94,31 @@ double** mocmaes(void (*callback)(int,int, double *, double *), unsigned int dim
         fpareto << "\n";
 	}
     fpareto.close();
-
-    // put all solution in a heap allocated array
-    double **solutions = new double*[mocma.solution().size()];
-    //for(int i = 0; i < numObjectives; i++) solutions[i] = new double[dim];
-    for(int i = 0; i < mocma.solution().size(); i++)
+    // write the solutions xvalues to file
+    std::ofstream fsolutions;
+    fsolutions.open("solutions.dat");
+    for( std::size_t i = 0; i < mocma.solution().size(); i++ )
     {
-        solutions[i] = new double[dim];
         for(int j = 0; j < dim; j++)
         {
-            solutions[i][j]=mocma.solution()[i].point[j];
+            solutions[i*dim+j]=mocma.solution()[i].point[j];
+            fsolutions << mocma.solution()[i].point[j]<<" ";
         }
-    }
-	return solutions;
+        fsolutions << "\n";
+	}
+    fsolutions.close();
+    // put all solution in a heap allocated array
+    //double **solutions = new double*[mocma.solution().size()];
+    //for(int i = 0; i < numObjectives; i++) solutions[i] = new double[dim];
+    /*for(int i = 0; i < mocma.solution().size(); i++)
+    {
+        //solutions[i] = new double[dim];
+        for(int j = 0; j < dim; j++)
+        {
+            solutions[i*dim+j]=mocma.solution()[i].point[j];
+        }
+    }*/
+	return 0;
 }
 
 

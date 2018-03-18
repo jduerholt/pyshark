@@ -34,11 +34,14 @@ class mocma(wrapper.wrapper):
         CMPFUNC = CFUNCTYPE(None, c_int, c_int, POINTER(c_double), POINTER(c_double))
         # try to initialize callback function
         callback = CMPFUNC(self.callback)
+        # allocate solutions array
+        solutions = numpy.zeros([self.mu*self.n_var])
         # start the optimizer
-        sols = self.sharkwrapper.mocmaes(callback, self.n_var, self.n_objectives,
+        check = self.sharkwrapper.mocmaes(callback, self.n_var, self.n_objectives,
             numpy.ctypeslib.as_ctypes(self.initials), self.maxiter,
             numpy.ctypeslib.as_ctypes(self.bounds[0]),
-            numpy.ctypeslib.as_ctypes(self.bounds[1]), self.mu, c_double(self.sigma))
-        solutions = numpy.ctypeslib.as_array(sols, (self.mu, self.n_var))
-        print (solutions)
-        return
+            numpy.ctypeslib.as_ctypes(self.bounds[1]),
+            self.mu, c_double(self.sigma),
+            numpy.ctypeslib.as_ctypes(solutions))
+        solutions = solutions.reshape(self.mu,self.n_var)
+        return solutions
