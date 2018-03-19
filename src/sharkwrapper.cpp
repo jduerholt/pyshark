@@ -18,41 +18,6 @@ using namespace std;
 extern "C" {
 #endif
 
-double test(int length, double *inp)
-{
-	// it gets and std::vector and returns an double
-	return inp[0]*inp[0];
-}
-
-
-unsigned int do_stuff_with_shark(unsigned int evaluations)
-{
-	// The C caller does not know or care for what we do inside the
-	// function. In particular, we can execute C++ code. Of course, we
-	// have to limit ourselves to C return types.
-
-	// We use Shark to run MO-CMA-ES on the DTLZ-2 problem for the number
-	// of iterations given by the parameter. THIS IS A DUMMY, here you do
-	// whatever it takes to solve your problem.
-	shark::DTLZ2 dtlz2;
-	dtlz2.setNumberOfVariables( 3 );
-	shark::MOCMA mocma;
-	dtlz2.init();
-	mocma.init(dtlz2);
-	while (dtlz2.evaluationCounter() < evaluations) {
-		mocma.step(dtlz2);
-	}
-	// Print the optimal pareto front
-	for( std::size_t i = 0; i < mocma.solution().size(); i++ ) {
-        for( std::size_t j = 0; j < dtlz2.numberOfObjectives(); j++ ) {
-                std::cout<< mocma.solution()[ i ].value[j]<<" ";
-        }
-        std::cout << std::endl;
-	}
-
-	// We return the number of Pareto optimal solutions.
-	return mocma.solution().size();
-}
 
 int mocmaes(void (*callback)(int,int, double *, double *), unsigned int dim, unsigned int numObjectives,
 	double *initial, int maxiter, double *lowerBound, double *upperBound, int mu, double sigma, double *solutions)
@@ -78,12 +43,11 @@ int mocmaes(void (*callback)(int,int, double *, double *), unsigned int dim, uns
 	custom.init(callback);
 	// setup mocma
 	shark::MOCMA mocma;
-    mocma.mu() = mu;
+    if (mu) mocma.mu() = mu;
     mocma.initialSigma() = sigma;
 	mocma.init(custom);
-	// return
+	// optimize
 	while (custom.evaluationCounter() < maxiter) mocma.step(custom);
-
 	// write the pareto front to pareto.dat
     std::ofstream fpareto;
     fpareto.open ("pareto.dat");
@@ -95,18 +59,18 @@ int mocmaes(void (*callback)(int,int, double *, double *), unsigned int dim, uns
 	}
     fpareto.close();
     // write the solutions xvalues to file
-    std::ofstream fsolutions;
-    fsolutions.open("solutions.dat");
+    //std::ofstream fsolutions;
+    //solutions.open("solutions.dat");
     for( std::size_t i = 0; i < mocma.solution().size(); i++ )
     {
         for(int j = 0; j < dim; j++)
         {
             solutions[i*dim+j]=mocma.solution()[i].point[j];
-            fsolutions << mocma.solution()[i].point[j]<<" ";
+            //fsolutions << mocma.solution()[i].point[j]<<" ";
         }
-        fsolutions << "\n";
+        //fsolutions << "\n";
 	}
-    fsolutions.close();
+    //fsolutions.close();
     // put all solution in a heap allocated array
     //double **solutions = new double*[mocma.solution().size()];
     //for(int i = 0; i < numObjectives; i++) solutions[i] = new double[dim];
@@ -121,60 +85,40 @@ int mocmaes(void (*callback)(int,int, double *, double *), unsigned int dim, uns
 	return 0;
 }
 
-
-
-unsigned int cmaes()
+int cmaes(double (*callback)(int, double *), unsigned int dim,
+    double *initial, int maxiter, int mu,
+    int lambda, double sigma, double *solutions)
 {
-	shark::CMA cma;
-	cma.setInitialSigma(0.1);
-	//shark::Sphere sphere(2);
-	Socustom sphere(1);
-	sphere.init(test);
-	cma.init(sphere, sphere.proposeStartingPoint());
-	do {
-        cma.step( sphere );
-
-        // Report information on the optimizer state and the current solution to the console.
-        cout << sphere.evaluationCounter() << " " << cma.solution().value << " " << cma.solution().point << " " << cma.sigma() << endl;
-	} while(cma.solution().value > 1E-20 );
-	//cma.init(sphere, sphere.proposeStartingPoint());
-	return 0;
-}
-
-double* custom_cmaes(double (*callback)(int, double *), unsigned int dim,
-	double *initial, double sigma, int maxiter)
-{
-
-	//shark::Sphere sphere(2);
-	Socustom sphere(dim);
-	sphere.init(callback);
-	shark::CMA cma;
-	//cma.setInitialSigma(0.1);
-	cma.setInitialSigma(sigma);
-	// make Searchpoint out of initial array
+    // make Searchpoint out of initial array
 	shark::RealVector x(dim);
 	for (int i = 0; i < x.size(); i++) {
 		x(i) = initial[i];
 	}
-	//cma.init(sphere, sphere.proposeStartingPoint());
-	cma.init(sphere, x);
-	cout << "lambda: " << cma.lambda() << " mu: " << cma.mu() << endl;
+	//shark::Sphere sphere(2);
+	Socustom custom(dim);
+	custom.init(callback);
+    // initialize the cma
+	shark::CMA cma;
+	cma.setInitialSigma(sigma);
+    if (lambda)
+    {
+        cma.setLambda(lambda);
+        if (mu) cma.setMu(mu);
+    }
+	cma.init(custom, x);
+    cout << "(" << cma.mu()<<","<<cma.lambda()<<")-CMA-ES in dimension "<<dim<<endl;
+    // optimize
+    //fout.open("outcmaesfit.dat");
 	for(int i = 0; i<maxiter; i++)
 	{
-		cma.step( sphere );
-        // Report information on the optimizer state and the current solution to the console.
-        cout << sphere.evaluationCounter() << " " << cma.solution().value << " " << cma.solution().point << " " << cma.sigma() << endl;
+		cma.step( custom );
+        //fout<<custom.evaluationCounter() << " " << cma.condition() << " "
+        //    << cma.sigma << " " << cma.solution().calue
 	}
-	// copy cma.solution.point to an heap allocated array
-	double *solution = new double[dim];
-	for(int i = 0; i < dim; i++) solution[i] = cma.solution().point[i];
-	/*do {
-        cma.step( sphere );
 
-        // Report information on the optimizer state and the current solution to the console.
-        cout << sphere.evaluationCounter() << " " << cma.solution().value << " " << cma.solution().point << " " << cma.sigma() << endl;
-	} while(cma.solution().value > 1E-20 );*/
-	return solution;
+	// copy cma.solution.point to python allocated solution pointer
+	for(int i = 0; i < dim; i++) solutions[i] = cma.solution().point[i];
+	return 0;
 }
 
 

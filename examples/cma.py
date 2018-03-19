@@ -11,7 +11,7 @@ def sphere(x):
 
 # setup cmaes
 initials = numpy.array([60.0, -15.0, 37.0])
-opt = cma(maxiter=50, ofunc=sphere, initials=initials, sigma=0.5, lamb=5, mu=2)
+opt = cma(maxiter=500, ofunc=sphere, initials=initials, sigma=0.5, lamb=5, mu=2)
 # run
 solution = opt()
 print solution
