@@ -76,5 +76,4 @@ called ``pareto.dat`` is created holding the values of the optimal solutions.
 Acknowledgments
 ---------------
 
-* **Prof. Tobias Glasmachers** for a great lecture on Evolutionary Algorithms and for
-initial help with wrapping Shark.
+* **Prof. Tobias Glasmachers** for a great lecture on Evolutionary Algorithms and for initial help with wrapping Shark.
