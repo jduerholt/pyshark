@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import numpy
-from sharkwrapper import cma
+from pyshark import cma
 
 
 # objective function

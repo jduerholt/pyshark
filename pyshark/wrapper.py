@@ -5,6 +5,10 @@ import os
 
 
 class wrapper(object):
+    """
+    Base class used for wrapping shark with ctypes. It reads libsharkwrapper.so
+    and sets the returntypes for the wrapped cmaes and wrapped mocmaes.
+    """
 
     def __init__(self):
         # try to import dll and setup the ObjectiveFunctions

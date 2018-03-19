@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # optproblems needs do be installed for this example
 import numpy
-from sharkwrapper import mocma
+from pyshark import mocma
 from optproblems import dtlz
 
 # setup objective function
